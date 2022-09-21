@@ -1,6 +1,7 @@
 import requests
 import time
 import parsel
+from tech_news.database import create_news
 
 
 # Requisito 1
@@ -46,17 +47,32 @@ def scrape_noticia(html_content):
     tags = selector.css("section.post-tags ul li a::text").getall()
     category = selector.css("div.meta-category span.label::text").get()
     return {
-    "url": url,
-    "title": title,
-    "timestamp": timestamp,
-    "writer": writer,
-    "summary": summary,
-    "comments_count": comments_count,
-    "tags": tags,
-    "category": category
+        "url": url,
+        "title": title,
+        "timestamp": timestamp,
+        "writer": writer,
+        "summary": summary,
+        "comments_count": comments_count,
+        "tags": tags,
+        "category": category
     }
 
 
 # Requisito 5
 def get_tech_news(amount):
-    """Seu código deve vir aqui"""
+    news_amount = []
+    url = "https://blog.betrybe.com/"
+
+    while len(news_amount) < amount:
+        fetch_news_content = fetch(url)
+        all_news = scrape_novidades(fetch_news_content)
+        for itens in all_news:
+            fetch_content = fetch(itens)
+            news_summary = scrape_noticia(fetch_content)
+            news_amount.append(news_summary)
+            if len(news_amount) == amount:
+                break
+        url = scrape_next_page_link(fetch_news_content)
+
+    create_news(news_amount)
+    return news_amount
